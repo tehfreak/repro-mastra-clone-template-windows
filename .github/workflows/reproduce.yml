@@ -1,0 +1,63 @@
+name: reproduce
+
+# The clone should fail on Windows and work on Linux. This job is green while
+# that holds and red once it doesn't.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  reproduce:
+    name: ${{ matrix.os }} expects ${{ matrix.expect }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            expect: BROKEN
+            expect_pr: NPX-ENOENT
+          - os: ubuntu-latest
+            expect: WORKS
+            expect_pr: NPX-OK
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm install
+
+      - run: npm run typecheck
+
+      - name: check the verdict
+        shell: bash
+        run: |
+          set +e
+          out="$(node repro.ts 2>&1)"
+          echo "$out"
+
+          verdict="$(echo "$out" | grep -oE 'VERDICT: (BROKEN|WORKS)' | tail -1)"
+          pr="$(echo "$out" | grep -oE 'PR17645: (NPX-ENOENT|NPX-OK)' | tail -1)"
+
+          echo "got:      $verdict / $pr"
+          echo "expected: VERDICT: ${{ matrix.expect }} / PR17645: ${{ matrix.expect_pr }}"
+
+          if [ -z "$verdict" ] || [ -z "$pr" ]; then
+            echo "a verdict line is missing, the script probably crashed"
+            exit 1
+          fi
+
+          if [ "$verdict" != "VERDICT: ${{ matrix.expect }}" ]; then
+            echo "the shipped implementation changed behaviour on this platform"
+            exit 1
+          fi
+
+          if [ "$pr" != "PR17645: ${{ matrix.expect_pr }}" ]; then
+            echo "the execFile approach changed behaviour on this platform"
+            exit 1
+          fi

@@ -1,0 +1,23 @@
+{
+  "name": "repro-mastra-clone-template-windows",
+  "private": true,
+  "version": "0.0.0",
+  "description": "repro: create-mastra --template cannot clone on Windows (shell-quote output fed to cmd.exe)",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "repro": "node repro.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "execa": "9.6.1",
+    "shell-quote": "1.8.4"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "@types/shell-quote": "1.7.5",
+    "typescript": "5.9.3"
+  }
+}
