@@ -5,17 +5,18 @@ the clone commands are built with POSIX shell quoting and then run through `cmd.
 
 ## Status
 
-Reported upstream, still open:
+Fixed upstream in `create-mastra@1.20.0`. https://github.com/mastra-ai/mastra/issues/17646 was
+closed on 2026-08-07. https://github.com/mastra-ai/mastra/pull/19825 replaced `shell-quote` and
+`exec` in `cloneRepositoryWithoutGit` with `execa` and an args array, the fix suggested below.
+https://github.com/mastra-ai/mastra/pull/17645 was closed without merging.
 
-- Issue: https://github.com/mastra-ai/mastra/issues/17646
-- PR: https://github.com/mastra-ai/mastra/pull/17645 (open, no activity since 2026-06-09)
-
-The PR is the right idea but doesn't land it yet, see below.
+`repro.ts` runs a copy of the 1.19.0 code, so its verdicts stay the same. Checked on Windows on
+2026-11-12: `create-mastra@1.38.0 myapp --template chat-with-pdf` clones the template.
 
 ## What happens
 
 ```
-npx create-mastra@latest myapp --template chat-with-pdf
+npx create-mastra@1.19.0 myapp --template chat-with-pdf
 ```
 
 ```
@@ -74,7 +75,7 @@ That's where the doubled quotes in git's error come from.
 Linux and macOS are fine, since `exec` uses `/bin/sh` there and the quoting is correct. That's also
 why CI never caught it.
 
-## The open PR
+## The earlier PR
 
 PR #17645 drops `shell-quote` and moves to `execFile`. That fixes the `git` call, but `execFile`
 runs without a shell, and on Windows `npx` and `npm` are `.cmd` shims, which can't be spawned that
